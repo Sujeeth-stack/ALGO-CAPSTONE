@@ -1,7 +1,4 @@
-"""
-Flask Application — Job Skill Portal
-Full-stack web app with BST visualization, Random Forest predictions, and job browsing.
-"""
+
 
 import os
 import ast
