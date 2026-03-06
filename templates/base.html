@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Job Skill Portal — AI-powered job prediction using Random Forest and BST visualization">
+    <title>{% block title %}Job Skill Portal{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    {% block head %}{% endblock %}
+</head>
+
+<body>
+    <!-- Background Effects -->
+    <div class="bg-grid"></div>
+    <div class="bg-glow-orb orb-1"></div>
+    <div class="bg-glow-orb orb-2"></div>
+    <div class="bg-glow-orb orb-3"></div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="nav-brand">
+                <div class="nav-brand-icon">JSP</div>
+                <span class="nav-brand-text">Job Skill Portal</span>
+            </a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="/" class="nav-link {% if request.endpoint == 'index' %}active{% endif %}">Home</a></li>
+                <li><a href="/predict"
+                        class="nav-link {% if request.endpoint == 'predict_page' %}active{% endif %}">Predict</a></li>
+                <li><a href="/browse"
+                        class="nav-link {% if request.endpoint == 'browse_page' %}active{% endif %}">Browse</a></li>
+                <li><a href="/bst" class="nav-link {% if request.endpoint == 'bst_page' %}active{% endif %}">BST
+                        Visualizer</a></li>
+                <li><a href="/prediction-bst"
+                        class="nav-link {% if request.endpoint == 'prediction_bst_page' %}active{% endif %}">Prediction
+                        BST</a></li>
+                <li><a href="/dashboard"
+                        class="nav-link {% if request.endpoint == 'dashboard_page' %}active{% endif %}">Dashboard</a>
+                </li>
+                <li><a href="/about"
+                        class="nav-link {% if request.endpoint == 'about_page' %}active{% endif %}">About</a></li>
+            </ul>
+            <div class="nav-hamburger" onclick="document.getElementById('navLinks').classList.toggle('open')">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2026 Job Skill Portal — Built with Flask, Random Forest &amp; BST | <a href="/about">About this
+                project</a></p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>

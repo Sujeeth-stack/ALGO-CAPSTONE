@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+{% block title %}Predict Job Category — Job Skill Portal{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1 class="page-title">🎯 Job Category Prediction</h1>
+        <p class="page-subtitle">Enter your skills and our Random Forest model will predict the best matching job
+            category</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; max-width: 1200px; margin: 0 auto;">
+        <!-- Input Panel -->
+        <div class="glass-card glass-card-lg">
+            <h3 class="section-title" style="margin-bottom: 1.5rem;">Enter Your Details</h3>
+
+            <!-- Name Input -->
+            <div class="form-group">
+                <label class="form-label">Your Name</label>
+                <input type="text" id="userName" class="form-input" placeholder="Enter your full name...">
+            </div>
+
+            <!-- Selected Skills -->
+            <div class="form-group">
+                <label class="form-label">Selected Skills</label>
+                <div id="selectedSkills" class="skill-tags"
+                    style="min-height: 48px; padding: 0.5rem; background: rgba(255,255,255,0.02); border-radius: var(--radius-sm); border: 1px dashed var(--border-color);">
+                    <span style="color: var(--text-muted); font-size: 0.85rem;" id="skillPlaceholder">Click popular
+                        skills or type your own below...</span>
+                </div>
+            </div>
+
+            <!-- Custom Skill Input -->
+            <div class="form-group">
+                <label class="form-label">Add Custom Skill</label>
+                <div style="display: flex; gap: 0.5rem;">
+                    <input type="text" id="customSkill" class="form-input" placeholder="Type a skill and press Enter..."
+                        onkeypress="if(event.key==='Enter')addCustomSkill()">
+                    <button class="btn btn-secondary" onclick="addCustomSkill()">Add</button>
+                </div>
+            </div>
+
+            <!-- Popular Skills -->
+            <div class="form-group">
+                <label class="form-label">Popular Skills (click to add)</label>
+                <div class="skill-tags" id="popularSkills">
+                    {% for skill in popular_skills[:50] %}
+                    <span class="skill-tag" onclick="toggleSkill(this, '{{ skill }}')">{{ skill }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <button class="btn btn-primary btn-lg w-full" onclick="predictJob()" id="predictBtn">
+                🔮 Predict Job Category
+            </button>
+        </div>
+
+        <!-- Results Panel -->
+        <div class="glass-card glass-card-lg">
+            <h3 class="section-title" style="margin-bottom: 1.5rem;">Prediction Results</h3>
+
+            <div id="resultPlaceholder" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">🎯</div>
+                <p>Select your skills and click "Predict" to see results</p>
+            </div>
+
+            <div id="predictionResults" class="prediction-results hidden">
+                <div class="alert alert-success" id="resultSummary"></div>
+                <div id="resultCards"></div>
+                <a href="/prediction-bst" class="btn btn-secondary w-full mt-3" id="viewPredBstBtn"
+                    style="display:none;">
+                    🌳 View Prediction BST Visualization
+                </a>
+            </div>
+
+            <div id="loadingSpinner" class="hidden" style="text-align: center; padding: 3rem;">
+                <div class="spinner"></div>
+                <p style="color: var(--text-secondary); margin-top: 1rem;">Analyzing your skills...</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let selectedSkills = new Set();
+
+    function toggleSkill(element, skill) {
+        if (selectedSkills.has(skill)) {
+            selectedSkills.delete(skill);
+            element.classList.remove('selected');
+        } else {
+            selectedSkills.add(skill);
+            element.classList.add('selected');
+        }
+        renderSelectedSkills();
+    }
+
+    function addCustomSkill() {
+        const input = document.getElementById('customSkill');
+        const skill = input.value.trim().toLowerCase();
+        if (skill && !selectedSkills.has(skill)) {
+            selectedSkills.add(skill);
+            renderSelectedSkills();
+            input.value = '';
+        }
+    }
+
+    function removeSkill(skill) {
+        selectedSkills.delete(skill);
+        // Un-highlight popular skill tags
+        document.querySelectorAll('#popularSkills .skill-tag').forEach(el => {
+            if (el.textContent.trim().toLowerCase() === skill) {
+                el.classList.remove('selected');
+            }
+        });
+        renderSelectedSkills();
+    }
+
+    function renderSelectedSkills() {
+        const container = document.getElementById('selectedSkills');
+        const placeholder = document.getElementById('skillPlaceholder');
+        if (selectedSkills.size === 0) {
+            container.innerHTML = '<span style="color: var(--text-muted); font-size: 0.85rem;" id="skillPlaceholder">Click popular skills or type your own below...</span>';
+            return;
+        }
+        container.innerHTML = '';
+        selectedSkills.forEach(skill => {
+            const tag = document.createElement('span');
+            tag.className = 'skill-tag selected';
+            tag.innerHTML = `${skill} <span class="remove" onclick="event.stopPropagation();removeSkill('${skill}')">&times;</span>`;
+            container.appendChild(tag);
+        });
+    }
+
+    async function predictJob() {
+        const name = document.getElementById('userName').value.trim();
+        if (!name) {
+            showNotification('Please enter your name', 'warning');
+            document.getElementById('userName').focus();
+            return;
+        }
+        if (selectedSkills.size === 0) {
+            showNotification('Please select at least one skill', 'warning');
+            return;
+        }
+
+        const btn = document.getElementById('predictBtn');
+        const spinner = document.getElementById('loadingSpinner');
+        const results = document.getElementById('predictionResults');
+        const placeholder = document.getElementById('resultPlaceholder');
+
+        btn.disabled = true;
+        btn.textContent = '⏳ Analyzing...';
+        spinner.classList.remove('hidden');
+        results.classList.add('hidden');
+        placeholder.classList.add('hidden');
+
+        const data = await apiCall('/api/predict', {
+            method: 'POST',
+            body: JSON.stringify({ skills: Array.from(selectedSkills).join(', '), name: name })
+        });
+
+        btn.disabled = false;
+        btn.textContent = '🔮 Predict Job Category';
+        spinner.classList.add('hidden');
+
+        if (data && data.predictions) {
+            results.classList.remove('hidden');
+
+            // Summary
+            const top = data.predictions[0];
+            document.getElementById('resultSummary').innerHTML =
+                `✅ <strong>${data.name}</strong> (ID: #${data.prediction_id}) → Best match: <strong>${top.category}</strong> with ${top.confidence_pct} confidence`;
+
+            // Show prediction BST link
+            document.getElementById('viewPredBstBtn').style.display = 'flex';
+
+            // Cards
+            const cardsHtml = data.predictions.map((pred, i) => `
+            <div class="glass-card prediction-card" style="animation: fadeInUp 0.4s ease ${i * 0.1}s both;">
+                <div class="prediction-rank rank-${i + 1}">#${i + 1}</div>
+                <div class="prediction-info">
+                    <div class="prediction-category">${pred.category}</div>
+                    <div class="prediction-bar-bg">
+                        <div class="prediction-bar" style="width: ${pred.confidence * 100}%;"></div>
+                    </div>
+                </div>
+                <div class="prediction-confidence">${pred.confidence_pct}</div>
+            </div>
+        `).join('');
+
+            document.getElementById('resultCards').innerHTML = cardsHtml;
+            showNotification(`Prediction complete! Best match: ${top.category}`, 'success');
+        }
+    }
+</script>
+{% endblock %}

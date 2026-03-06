@@ -1,0 +1,259 @@
+{% extends 'base.html' %}
+{% block title %}Prediction BST — Job Skill Portal{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 1rem;">
+    <div class="page-header" style="padding: 1.5rem 0 1rem;">
+        <h1 class="page-title">🧑‍💼 Prediction History BST</h1>
+        <p class="page-subtitle">Every prediction inserts the user's name (with prediction ID) into this BST — visualize
+            who predicted what</p>
+    </div>
+
+    {% if bst_stats.total_nodes == 0 %}
+    <div class="glass-card glass-card-lg text-center" style="padding: 4rem;">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">🌱</div>
+        <h3 style="margin-bottom: 0.75rem;">No Predictions Yet</h3>
+        <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Go to the <strong>Predict</strong> page, enter
+            your name and skills, and make a prediction. Each prediction will be added to this BST!</p>
+        <a href="/predict" class="btn btn-primary btn-lg">🎯 Make a Prediction</a>
+    </div>
+    {% endif %}
+
+    <div class="bst-container">
+        <!-- Control Panel -->
+        <div class="bst-controls">
+            <!-- BST Stats -->
+            <div class="glass-card">
+                <h4 style="font-weight: 700; margin-bottom: 0.75rem; font-size: 0.9rem; color: var(--accent-purple);">📊
+                    Prediction BST Stats</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                    <div style="text-align: center; padding: 0.5rem;">
+                        <div style="font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; color: var(--accent-purple);"
+                            id="statNodes">{{ bst_stats.total_nodes }}</div>
+                        <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Users</div>
+                    </div>
+                    <div style="text-align: center; padding: 0.5rem;">
+                        <div style="font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; color: var(--accent-pink);"
+                            id="statHeight">{{ bst_stats.height }}</div>
+                        <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Height
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search by Name -->
+            <div class="glass-card">
+                <h4 style="font-weight: 700; margin-bottom: 0.75rem; font-size: 0.9rem; color: var(--accent-purple);">🔍
+                    Search by Name</h4>
+                <div style="display: flex; gap: 0.5rem;">
+                    <input type="text" id="searchName" class="form-input" placeholder="e.g., John"
+                        onkeypress="if(event.key==='Enter')searchPredBST()" style="font-size: 0.85rem;">
+                    <button class="btn btn-primary" onclick="searchPredBST()"
+                        style="white-space: nowrap; font-size: 0.85rem; background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));">Search</button>
+                </div>
+                <div id="searchResult" class="mt-2" style="font-size: 0.85rem;"></div>
+            </div>
+
+            <!-- Traversals -->
+            <div class="glass-card">
+                <h4 style="font-weight: 700; margin-bottom: 0.75rem; font-size: 0.9rem; color: var(--accent-gold);">📋
+                    Traversals</h4>
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <button class="btn btn-secondary" onclick="traversePredBST('inorder')" style="font-size: 0.85rem;">▶
+                        Inorder (Alphabetical)</button>
+                    <button class="btn btn-secondary" onclick="traversePredBST('preorder')"
+                        style="font-size: 0.85rem;">▶ Preorder</button>
+                    <button class="btn btn-secondary" onclick="traversePredBST('postorder')"
+                        style="font-size: 0.85rem;">▶ Postorder</button>
+                </div>
+            </div>
+
+            <!-- View Controls -->
+            <div class="glass-card">
+                <h4 style="font-weight: 700; margin-bottom: 0.75rem; font-size: 0.9rem;">⚙️ View Controls</h4>
+                <div class="form-group" style="margin-bottom: 0.5rem;">
+                    <label class="form-label" style="font-size: 0.8rem;">Tree Depth</label>
+                    <input type="range" id="depthSlider" min="2" max="15" value="10" style="width: 100%;"
+                        onchange="reloadPredTree()">
+                    <span id="depthValue" style="font-size: 0.8rem; color: var(--text-muted);">Depth: 10</span>
+                </div>
+                <button class="btn btn-ghost w-full" onclick="resetPredViz()" style="font-size: 0.85rem;">🔄 Reset
+                    View</button>
+                <button class="btn btn-ghost w-full mt-1" onclick="clearPredBST()"
+                    style="font-size: 0.85rem; color: var(--accent-red);">🗑️ Clear All Predictions</button>
+            </div>
+
+            <!-- Quick Add -->
+            <div class="glass-card">
+                <h4 style="font-weight: 700; margin-bottom: 0.75rem; font-size: 0.9rem; color: var(--accent-green);">🚀
+                    Quick Predict</h4>
+                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.75rem;">Make a new
+                    prediction to grow this BST</p>
+                <a href="/predict" class="btn btn-primary w-full"
+                    style="font-size: 0.85rem; justify-content: center;">🎯 Go to Predict Page</a>
+            </div>
+        </div>
+
+        <!-- Visualization Canvas -->
+        <div>
+            <div class="glass-card bst-canvas" id="predBstCanvas"
+                style="height: calc(100vh - 280px); border-color: rgba(124, 58, 237, 0.2);">
+                {% if bst_stats.total_nodes == 0 %}
+                <div
+                    style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); flex-direction: column; gap: 1rem;">
+                    <div style="font-size: 3rem;">🌱</div>
+                    <p>Make predictions to see the tree grow here...</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Traversal Output -->
+            <div id="traversalOutput" class="glass-card mt-2 hidden" style="max-height: 200px; overflow-y: auto;">
+                <h4 style="font-weight: 700; margin-bottom: 0.75rem; font-size: 0.9rem; color: var(--accent-gold);">
+                    Traversal Result</h4>
+                <div id="traversalItems" class="traversal-display"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/bst_viz.js') }}"></script>
+<script>
+    let predViz;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        predViz = new BSTVisualizer('predBstCanvas');
+        const stats = await predViz.loadPredictionTree(10);
+        if (stats) updateStats(stats);
+    });
+
+    // Extend the BSTVisualizer to load from prediction BST endpoint
+    BSTVisualizer.prototype.loadPredictionTree = async function (maxDepth = 10) {
+        const data = await apiCall(`/api/prediction-bst/tree?max_depth=${maxDepth}`);
+        if (data && data.tree) {
+            this.renderTree(data.tree);
+            return data.stats;
+        }
+        return null;
+    };
+
+    BSTVisualizer.prototype.highlightPredSearch = async function (name) {
+        const result = await apiCall('/api/prediction-bst/search', {
+            method: 'POST',
+            body: JSON.stringify({ name })
+        });
+
+        if (!result) return null;
+
+        this.nodeGroup.selectAll('circle')
+            .classed('search-path', false)
+            .classed('highlighted', false);
+
+        const path = result.path;
+        for (let i = 0; i < path.length; i++) {
+            await new Promise(resolve => setTimeout(resolve, 400));
+            const skillName = path[i].skill;
+            this.nodeGroup.selectAll('.bst-node')
+                .filter(d => d && d.data && d.data.name === skillName)
+                .select('circle')
+                .classed('search-path', true);
+        }
+
+        return result;
+    };
+
+    BSTVisualizer.prototype.animatePredTraversal = async function (type) {
+        const result = await apiCall('/api/prediction-bst/traverse', {
+            method: 'POST',
+            body: JSON.stringify({ type, limit: 100 })
+        });
+
+        if (!result) return null;
+
+        this.nodeGroup.selectAll('circle')
+            .classed('search-path', false)
+            .classed('highlighted', false);
+
+        for (let i = 0; i < result.result.length; i++) {
+            await new Promise(resolve => setTimeout(resolve, 300));
+            const skillName = result.result[i].skill;
+            this.nodeGroup.selectAll('.bst-node')
+                .filter(d => d && d.data && d.data.name === skillName)
+                .select('circle')
+                .classed('highlighted', true);
+        }
+
+        return result;
+    };
+
+    async function searchPredBST() {
+        const name = document.getElementById('searchName').value.trim();
+        if (!name) { showNotification('Enter a name to search', 'warning'); return; }
+
+        const result = await predViz.highlightPredSearch(name);
+        const resultDiv = document.getElementById('searchResult');
+
+        if (result) {
+            if (result.found) {
+                resultDiv.innerHTML = `
+                <div class="alert alert-success" style="padding:0.5rem 0.75rem;margin:0;">
+                    ✅ Found "<strong>${name}</strong>" | Prediction IDs: ${result.prediction_ids.join(', ')} | Steps: ${result.path_length}
+                </div>`;
+            } else {
+                resultDiv.innerHTML = `
+                <div class="alert alert-warning" style="padding:0.5rem 0.75rem;margin:0;">
+                    ❌ "${name}" not found | Steps: ${result.path_length}
+                </div>`;
+            }
+        }
+    }
+
+    async function traversePredBST(type) {
+        showNotification(`Running ${type} traversal...`, 'info');
+        const result = await predViz.animatePredTraversal(type);
+
+        if (result) {
+            const output = document.getElementById('traversalOutput');
+            const items = document.getElementById('traversalItems');
+            output.classList.remove('hidden');
+
+            items.innerHTML = result.result.map((item, i) =>
+                `<span class="traversal-item" style="animation-delay:${i * 0.03}s; border-color: rgba(124,58,237,0.3); color: var(--accent-purple);">${item.skill} <span style="color:var(--accent-pink);font-size:0.65rem;">(IDs: ${item.job_count})</span></span>`
+            ).join(' ');
+
+            showNotification(`${type} traversal: ${result.total} users`, 'success');
+        }
+    }
+
+    function reloadPredTree() {
+        const depth = document.getElementById('depthSlider').value;
+        document.getElementById('depthValue').textContent = `Depth: ${depth}`;
+        predViz.loadPredictionTree(parseInt(depth));
+    }
+
+    function resetPredViz() {
+        predViz.resetHighlights();
+        document.getElementById('searchResult').innerHTML = '';
+        document.getElementById('traversalOutput').classList.add('hidden');
+        predViz.loadPredictionTree(parseInt(document.getElementById('depthSlider').value));
+    }
+
+    async function clearPredBST() {
+        if (!confirm('Clear all prediction history from the BST?')) return;
+
+        const result = await apiCall('/api/prediction-bst/clear', { method: 'POST' });
+        if (result) {
+            showNotification('Prediction BST cleared!', 'success');
+            updateStats(result.stats);
+            predViz.loadPredictionTree(10);
+        }
+    }
+
+    function updateStats(stats) {
+        document.getElementById('statNodes').textContent = stats.total_nodes;
+        document.getElementById('statHeight').textContent = stats.height;
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard — Job Skill Portal{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1 class="page-title">📈 Analytics Dashboard</h1>
+        <p class="page-subtitle">Model performance metrics, feature importance, and skill distribution analytics</p>
+    </div>
+
+    {% if metrics %}
+    <!-- Model Metrics -->
+    <div class="stats-row" style="grid-template-columns: repeat(4, 1fr);">
+        <div class="glass-card metric-card">
+            <div class="metric-value blue">{{ "%.1f"|format(metrics.accuracy * 100) }}%</div>
+            <div class="metric-label">Accuracy</div>
+        </div>
+        <div class="glass-card metric-card">
+            <div class="metric-value green">{{ "%.1f"|format(metrics.f1_score * 100) }}%</div>
+            <div class="metric-label">F1 Score</div>
+        </div>
+        <div class="glass-card metric-card">
+            <div class="metric-value purple">{{ "%.1f"|format(metrics.precision * 100) }}%</div>
+            <div class="metric-label">Precision</div>
+        </div>
+        <div class="glass-card metric-card">
+            <div class="metric-value gold">{{ "%.1f"|format(metrics.recall * 100) }}%</div>
+            <div class="metric-label">Recall</div>
+        </div>
+    </div>
+
+    <!-- Model Info -->
+    <div class="stats-row" style="grid-template-columns: repeat(4, 1fr); margin-top: 0;">
+        <div class="glass-card stat-card">
+            <div class="stat-value" style="font-size: 1.8rem;">{{ metrics.total_samples }}</div>
+            <div class="stat-label">Total Samples</div>
+        </div>
+        <div class="glass-card stat-card">
+            <div class="stat-value" style="font-size: 1.8rem;">{{ metrics.train_size }}</div>
+            <div class="stat-label">Train Size</div>
+        </div>
+        <div class="glass-card stat-card">
+            <div class="stat-value" style="font-size: 1.8rem;">{{ metrics.test_size }}</div>
+            <div class="stat-label">Test Size</div>
+        </div>
+        <div class="glass-card stat-card">
+            <div class="stat-value" style="font-size: 1.8rem;">{{ metrics.n_estimators }}</div>
+            <div class="stat-label">Estimators</div>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <!-- Confusion Matrix -->
+        <div class="glass-card glass-card-lg">
+            <h3 class="chart-title">🔢 Confusion Matrix</h3>
+            <div style="overflow-x: auto;">
+                <table class="confusion-matrix">
+                    <thead>
+                        <tr>
+                            <th>Predicted →</th>
+                            {% for cat in metrics.categories %}
+                            <th>{{ cat[:10] }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for i in range(metrics.confusion_matrix|length) %}
+                        <tr>
+                            <th>{{ metrics.categories[i][:10] }}</th>
+                            {% for j in range(metrics.confusion_matrix[i]|length) %}
+                            {% set val = metrics.confusion_matrix[i][j] %}
+                            {% set max_val = metrics.confusion_matrix|map('max')|max %}
+                            {% set intensity = (val / max_val * 0.6) if max_val > 0 else 0 %}
+                            <td
+                                style="background: rgba(0, 212, 255, {{ intensity }}); font-weight: {% if i == j %}700{% else %}400{% endif %};">
+                                {{ val }}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Per-Class Metrics -->
+        <div class="glass-card glass-card-lg">
+            <h3 class="chart-title">📊 Per-Class Performance</h3>
+            <div style="overflow-x: auto;">
+                <table class="confusion-matrix">
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Precision</th>
+                            <th>Recall</th>
+                            <th>F1-Score</th>
+                            <th>Support</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cat in metrics.categories %}
+                        {% set report = metrics.classification_report[cat] %}
+                        <tr>
+                            <th>{{ cat }}</th>
+                            <td>{{ "%.2f"|format(report.precision) }}</td>
+                            <td>{{ "%.2f"|format(report.recall) }}</td>
+                            <td>{{ "%.2f"|format(report['f1-score']) }}</td>
+                            <td>{{ report.support|int }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feature Importance -->
+    <div class="glass-card glass-card-lg mt-4">
+        <h3 class="chart-title">🏆 Top Feature Importance (Random Forest)</h3>
+        <div class="bar-chart">
+            {% for feat in feature_importance %}
+            <div class="bar-row fade-in">
+                <span class="bar-label">{{ feat.feature }}</span>
+                <div class="bar-track">
+                    <div class="bar-fill"
+                        style="width: {{ (feat.importance / feature_importance[0].importance * 100) }}%; transition-delay: {{ loop.index * 0.05 }}s;">
+                    </div>
+                </div>
+                <span class="bar-value">{{ "%.4f"|format(feat.importance) }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Top BST Skills -->
+    <div class="glass-card glass-card-lg mt-4">
+        <h3 class="chart-title">🌳 Top Skills in BST (by Frequency)</h3>
+        <div class="bar-chart">
+            {% for skill in top_skills %}
+            <div class="bar-row fade-in">
+                <span class="bar-label">{{ skill.skill }}</span>
+                <div class="bar-track">
+                    <div class="bar-fill"
+                        style="width: {{ (skill.frequency / top_skills[0].frequency * 100) }}%; background: linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-pink) 100%); transition-delay: {{ loop.index * 0.05 }}s;">
+                    </div>
+                </div>
+                <span class="bar-value" style="color: var(--accent-purple);">{{ skill.frequency }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    {% else %}
+    <div class="glass-card glass-card-lg text-center" style="padding: 4rem;">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">⚠️</div>
+        <h3>No Model Metrics Found</h3>
+        <p style="color: var(--text-secondary); margin-top: 0.5rem;">Please run <code>python train_model.py</code> to
+            train the model first.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

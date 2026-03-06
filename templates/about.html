@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+{% block title %}About — Job Skill Portal{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1 class="page-title">ℹ️ About This Project</h1>
+        <p class="page-subtitle">Job Skill Portal — A comprehensive full-stack AI project with BST data structure</p>
+    </div>
+
+    <!-- Project Overview -->
+    <div class="glass-card glass-card-lg mb-4 fade-in">
+        <h3 class="section-title">📋 Project Overview</h3>
+        <p style="color: var(--text-secondary); line-height: 1.8; margin-top: 1rem;">
+            The <strong style="color: var(--accent-blue);">Job Skill Portal</strong> is a full-stack web application
+            that combines Machine Learning with fundamental Data Structures to create an intelligent job matching
+            system.
+            The system is trained on <strong>23,427 real job postings</strong> across 5 industry categories, using a
+            <strong>Random Forest classifier</strong> to predict the most suitable job category based on user skills.
+        </p>
+        <p style="color: var(--text-secondary); line-height: 1.8; margin-top: 1rem;">
+            At its core, the application uses a <strong style="color: var(--accent-purple);">Binary Search Tree
+                (BST)</strong>
+            to index and organize all extracted skills from the dataset. This allows efficient O(log n) search
+            operations
+            and provides a visually stunning interactive tree visualization powered by D3.js.
+        </p>
+    </div>
+
+    <!-- Data Structure: BST -->
+    <div class="glass-card glass-card-lg mb-4 fade-in">
+        <h3 class="section-title">🌳 Binary Search Tree (BST) — Algorithm Details</h3>
+        <div style="margin-top: 1rem;">
+            <p style="color: var(--text-secondary); line-height: 1.8; margin-bottom: 1rem;">
+                The BST is the core data structure of this project, used for skill indexing and lookup:
+            </p>
+            <div class="features-grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
+                <div
+                    style="padding: 1rem; background: rgba(0,212,255,0.03); border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                    <h4 style="color: var(--accent-blue); margin-bottom: 0.5rem;">Insert — O(log n)</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem;">Skills are inserted alphabetically. If
+                        a skill already exists, the job ID is added to its list.</p>
+                </div>
+                <div
+                    style="padding: 1rem; background: rgba(124,58,237,0.03); border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                    <h4 style="color: var(--accent-purple); margin-bottom: 0.5rem;">Search — O(log n)</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem;">Efficiently find any skill and retrieve
+                        all associated jobs. Search path is animated in the visualizer.</p>
+                </div>
+                <div
+                    style="padding: 1rem; background: rgba(236,72,153,0.03); border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                    <h4 style="color: var(--accent-pink); margin-bottom: 0.5rem;">Delete — O(log n)</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem;">Handles all three cases: leaf node, one
+                        child, and two children (using inorder successor).</p>
+                </div>
+                <div
+                    style="padding: 1rem; background: rgba(251,191,36,0.03); border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                    <h4 style="color: var(--accent-gold); margin-bottom: 0.5rem;">Traversals</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem;">Inorder (sorted), Preorder
+                        (root-first), and Postorder (leaves-first) — all with animated visualization.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ML Algorithm -->
+    <div class="glass-card glass-card-lg mb-4 fade-in">
+        <h3 class="section-title">🤖 Random Forest Classifier</h3>
+        <div style="margin-top: 1rem;">
+            <p style="color: var(--text-secondary); line-height: 1.8; margin-bottom: 1rem;">
+                The prediction engine uses a Random Forest ensemble of <strong>200 decision trees</strong> trained on
+                TF-IDF vectorized skill features. The model achieves high accuracy by:
+            </p>
+            <ul style="color: var(--text-secondary); line-height: 2; padding-left: 1.5rem;">
+                <li>Cleaning and normalizing 23,427 skill set strings</li>
+                <li>TF-IDF vectorization with 5,000 features and bigrams</li>
+                <li>Balanced class weights for fair predictions across all 5 categories</li>
+                <li>200 estimators for robust ensemble predictions</li>
+                <li>Probability-based ranking of all categories for each prediction</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Tech Stack -->
+    <div class="page-header fade-in">
+        <h2 class="page-title" style="font-size: 1.8rem;">🛠️ Technology Stack</h2>
+    </div>
+
+    <div class="tech-stack fade-in">
+        <div class="glass-card tech-item">
+            <div class="tech-icon">🐍</div>
+            <div class="tech-name">Python 3</div>
+            <div class="tech-desc">Core programming language</div>
+        </div>
+        <div class="glass-card tech-item">
+            <div class="tech-icon">🌶️</div>
+            <div class="tech-name">Flask</div>
+            <div class="tech-desc">Web framework for backend</div>
+        </div>
+        <div class="glass-card tech-item">
+            <div class="tech-icon">🤖</div>
+            <div class="tech-name">scikit-learn</div>
+            <div class="tech-desc">ML library (Random Forest)</div>
+        </div>
+        <div class="glass-card tech-item">
+            <div class="tech-icon">📊</div>
+            <div class="tech-name">D3.js v7</div>
+            <div class="tech-desc">BST tree visualization</div>
+        </div>
+        <div class="glass-card tech-item">
+            <div class="tech-icon">💾</div>
+            <div class="tech-name">SQLite</div>
+            <div class="tech-desc">Relational database</div>
+        </div>
+        <div class="glass-card tech-item">
+            <div class="tech-icon">🐼</div>
+            <div class="tech-name">pandas</div>
+            <div class="tech-desc">Data manipulation</div>
+        </div>
+        <div class="glass-card tech-item">
+            <div class="tech-icon">🎨</div>
+            <div class="tech-name">HTML/CSS/JS</div>
+            <div class="tech-desc">Frontend with glassmorphism</div>
+        </div>
+        <div class="glass-card tech-item">
+            <div class="tech-icon">📐</div>
+            <div class="tech-name">TF-IDF</div>
+            <div class="tech-desc">Text feature extraction</div>
+        </div>
+    </div>
+
+    <!-- Dataset Info -->
+    <div class="glass-card glass-card-lg mt-4 mb-4 fade-in">
+        <h3 class="section-title">📁 Dataset Information</h3>
+        <div style="margin-top: 1rem;">
+            <table class="confusion-matrix" style="font-family: var(--font-main);">
+                <tr>
+                    <th>Property</th>
+                    <th>Value</th>
+                </tr>
+                <tr>
+                    <td>File</td>
+                    <td>all_job_post.csv</td>
+                </tr>
+                <tr>
+                    <td>Total Records</td>
+                    <td>23,427</td>
+                </tr>
+                <tr>
+                    <td>Categories</td>
+                    <td>5</td>
+                </tr>
+                <tr>
+                    <td>Columns</td>
+                    <td>job_id, category, job_title, job_description, job_skill_set</td>
+                </tr>
+                <tr>
+                    <td>Category Distribution</td>
+                    <td>IT, Business Development, Finance, Sales, HR</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

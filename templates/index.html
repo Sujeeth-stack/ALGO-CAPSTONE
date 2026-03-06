@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% block title %}Job Skill Portal — AI-Powered Job Prediction{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-content">
+        <div class="hero-badge">
+            <span class="pulse"></span>
+            AI-Powered Job Matching • BST Data Structure
+        </div>
+
+        <h1 class="hero-title">
+            Find Your Dream Job with<br>
+            <span class="gradient-text">Intelligent Skill Matching</span>
+        </h1>
+
+        <p class="hero-description">
+            Powered by Random Forest Machine Learning and Binary Search Tree algorithms.
+            Enter your skills and discover the perfect career path with
+            <strong>{{ "%.1f"|format(accuracy) }}% accuracy</strong>.
+        </p>
+
+        <div class="btn-group">
+            <a href="/predict" class="btn btn-primary btn-lg">
+                🎯 Predict Your Job Category
+            </a>
+            <a href="/bst" class="btn btn-secondary btn-lg">
+                🌳 Explore BST Visualizer
+            </a>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-row">
+            <div class="glass-card stat-card">
+                <div class="stat-value" data-count="{{ total_jobs }}">0</div>
+                <div class="stat-label">Job Postings</div>
+            </div>
+            <div class="glass-card stat-card">
+                <div class="stat-value" data-count="{{ total_skills }}">0</div>
+                <div class="stat-label">Unique Skills</div>
+            </div>
+            <div class="glass-card stat-card">
+                <div class="stat-value" data-count="{{ num_categories }}">0</div>
+                <div class="stat-label">Categories</div>
+            </div>
+            <div class="glass-card stat-card">
+                <div class="stat-value" data-count="{{ bst_nodes }}">0</div>
+                <div class="stat-label">BST Nodes</div>
+            </div>
+            <div class="glass-card stat-card">
+                <div class="stat-value" data-count="{{ bst_height }}">0</div>
+                <div class="stat-label">BST Height</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="container">
+    <div class="page-header fade-in">
+        <h2 class="page-title">Core Features</h2>
+        <p class="page-subtitle">Explore the powerful capabilities of the Job Skill Portal</p>
+    </div>
+
+    <div class="features-grid">
+        <div class="glass-card feature-card fade-in">
+            <div class="feature-icon blue">🤖</div>
+            <h3 class="feature-title">Random Forest Prediction</h3>
+            <p class="feature-desc">Our ML model trained on 23,000+ job postings predicts the best job category based on
+                your skillset with high accuracy.</p>
+        </div>
+
+        <div class="glass-card feature-card fade-in">
+            <div class="feature-icon purple">🌳</div>
+            <h3 class="feature-title">BST Skill Index</h3>
+            <p class="feature-desc">Skills are indexed using a Binary Search Tree for efficient O(log n) search,
+                insertion, and deletion operations.</p>
+        </div>
+
+        <div class="glass-card feature-card fade-in">
+            <div class="feature-icon pink">📊</div>
+            <h3 class="feature-title">Interactive Visualization</h3>
+            <p class="feature-desc">Visualize the BST structure with D3.js — zoom, pan, search paths, and animated
+                traversals (inorder, preorder, postorder).</p>
+        </div>
+
+        <div class="glass-card feature-card fade-in">
+            <div class="feature-icon green">🔍</div>
+            <h3 class="feature-title">Job Browser</h3>
+            <p class="feature-desc">Browse and search through thousands of job postings filtered by category, title, and
+                required skills.</p>
+        </div>
+
+        <div class="glass-card feature-card fade-in">
+            <div class="feature-icon gold">📈</div>
+            <h3 class="feature-title">Analytics Dashboard</h3>
+            <p class="feature-desc">View model performance metrics, confusion matrix, feature importance, and skill
+                frequency distributions.</p>
+        </div>
+
+        <div class="glass-card feature-card fade-in">
+            <div class="feature-icon blue">💾</div>
+            <h3 class="feature-title">SQLite Database</h3>
+            <p class="feature-desc">All 23,000+ jobs stored in a normalized SQLite database with skills junction table
+                for efficient querying.</p>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works -->
+<section class="container">
+    <div class="page-header fade-in">
+        <h2 class="page-title">How It Works</h2>
+        <p class="page-subtitle">From raw data to intelligent predictions — our pipeline explained</p>
+    </div>
+
+    <div class="features-grid">
+        <div class="glass-card feature-card fade-in">
+            <div class="feature-icon blue">1️⃣</div>
+            <h3 class="feature-title">Data Collection</h3>
+            <p class="feature-desc">23,427 real job postings across 5 categories with extracted skill sets form our
+                training dataset.</p>
+        </div>
+        <div class="glass-card feature-card fade-in">
+            <div class="feature-icon purple">2️⃣</div>
+            <h3 class="feature-title">Feature Engineering</h3>
+            <p class="feature-desc">Skills are cleaned, normalized, and converted to numerical features using TF-IDF
+                vectorization (5,000 features).</p>
+        </div>
+        <div class="glass-card feature-card fade-in">
+            <div class="feature-icon green">3️⃣</div>
+            <h3 class="feature-title">Model Training</h3>
+            <p class="feature-desc">A Random Forest with 200 decision trees is trained on 80% of the data, achieving {{
+                "%.1f"|format(accuracy) }}% accuracy.</p>
+        </div>
+    </div>
+</section>
+{% endblock %}

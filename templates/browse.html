@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+{% block title %}Browse Jobs — Job Skill Portal{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1 class="page-title">🔍 Browse Job Postings</h1>
+        <p class="page-subtitle">Search and explore {{ categories|length }} categories of job postings</p>
+    </div>
+
+    <!-- Filters -->
+    <div class="glass-card" style="margin-bottom: 1.5rem; padding: 1.25rem;">
+        <div class="filter-bar">
+            <input type="text" id="searchInput" class="form-input" placeholder="🔍 Search by job title or skill..."
+                oninput="debouncedSearch()">
+            <select id="categoryFilter" class="form-select" onchange="loadJobs(1)" style="max-width: 250px;">
+                <option value="">All Categories</option>
+                {% for cat in categories %}
+                <option value="{{ cat }}">{{ cat }}</option>
+                {% endfor %}
+            </select>
+            <button class="btn btn-secondary" onclick="clearFilters()">Clear</button>
+        </div>
+    </div>
+
+    <!-- Job Count -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <span id="jobCount" style="color: var(--text-secondary); font-size: 0.9rem;">Loading...</span>
+        <span id="pageInfo" style="color: var(--text-muted); font-size: 0.85rem;"></span>
+    </div>
+
+    <!-- Jobs Table -->
+    <div class="glass-card">
+        <div class="job-table-container">
+            <table class="job-table">
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">#</th>
+                        <th>Job Title</th>
+                        <th style="width: 130px;">Category</th>
+                        <th>Key Skills</th>
+                        <th style="width: 80px;">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="jobTableBody">
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                            <div class="spinner"></div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination" id="pagination"></div>
+</div>
+
+<!-- Job Detail Modal -->
+<div class="modal-backdrop" id="jobModal" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+        <div id="modalContent">
+            <div class="spinner"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let currentPage = 1;
+    const perPage = 20;
+
+    const debouncedSearch = debounce(() => loadJobs(1), 300);
+
+    async function loadJobs(page = 1) {
+        currentPage = page;
+        const search = document.getElementById('searchInput').value;
+        const category = document.getElementById('categoryFilter').value;
+
+        const params = new URLSearchParams({
+            page, per_page: perPage, search, category
+        });
+
+        const data = await apiCall(`/api/jobs?${params}`);
+        if (!data) return;
+
+        document.getElementById('jobCount').textContent =
+            `Showing ${data.jobs.length} of ${data.total.toLocaleString()} jobs`;
+        document.getElementById('pageInfo').textContent =
+            `Page ${data.page} of ${data.total_pages}`;
+
+        const tbody = document.getElementById('jobTableBody');
+        if (data.jobs.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:3rem;color:var(--text-muted);">No jobs found matching your search.</td></tr>';
+        } else {
+            tbody.innerHTML = data.jobs.map((job, i) => `
+            <tr style="animation: fadeInUp 0.3s ease ${i * 0.03}s both;">
+                <td style="color:var(--text-muted);">${(page - 1) * perPage + i + 1}</td>
+                <td style="font-weight:600;">${escapeHtml(job.job_title || 'Untitled')}</td>
+                <td><span class="category-badge ${getCategoryClass(job.category)}">${getCategoryDisplay(job.category)}</span></td>
+                <td>
+                    <div class="skill-tags">
+                        ${job.skills.slice(0, 4).map(s => `<span class="skill-tag" style="cursor:default;font-size:0.7rem;">${escapeHtml(s)}</span>`).join('')}
+                        ${job.skills.length > 4 ? `<span style="color:var(--text-muted);font-size:0.75rem;">+${job.skills.length - 4}</span>` : ''}
+                    </div>
+                </td>
+                <td><button class="btn btn-ghost" style="font-size:0.8rem;" onclick="viewJob('${job.job_id}')">View</button></td>
+            </tr>
+        `).join('');
+        }
+
+        renderPagination(data.page, data.total_pages);
+    }
+
+    function renderPagination(current, total) {
+        const container = document.getElementById('pagination');
+        if (total <= 1) { container.innerHTML = ''; return; }
+
+        let html = `<button class="pagination-btn" onclick="loadJobs(${current - 1})" ${current <= 1 ? 'disabled' : ''}>&laquo;</button>`;
+
+        const maxButtons = 7;
+        let start = Math.max(1, current - 3);
+        let end = Math.min(total, start + maxButtons - 1);
+        start = Math.max(1, end - maxButtons + 1);
+
+        if (start > 1) html += `<button class="pagination-btn" onclick="loadJobs(1)">1</button><span style="color:var(--text-muted);">…</span>`;
+        for (let i = start; i <= end; i++) {
+            html += `<button class="pagination-btn ${i === current ? 'active' : ''}" onclick="loadJobs(${i})">${i}</button>`;
+        }
+        if (end < total) html += `<span style="color:var(--text-muted);">…</span><button class="pagination-btn" onclick="loadJobs(${total})">${total}</button>`;
+
+        html += `<button class="pagination-btn" onclick="loadJobs(${current + 1})" ${current >= total ? 'disabled' : ''}>&raquo;</button>`;
+        container.innerHTML = html;
+    }
+
+    async function viewJob(jobId) {
+        document.getElementById('jobModal').classList.add('active');
+        document.getElementById('modalContent').innerHTML = '<div class="spinner" style="margin:2rem auto;"></div>';
+
+        const data = await apiCall(`/api/job/${jobId}`);
+        if (!data) { closeModal(); return; }
+
+        document.getElementById('modalContent').innerHTML = `
+        <span class="category-badge ${getCategoryClass(data.category)}" style="margin-bottom:1rem;display:inline-block;">${data.category}</span>
+        <h2 style="font-family:var(--font-display);font-size:1.4rem;font-weight:700;margin-bottom:1rem;">${escapeHtml(data.job_title)}</h2>
+        <h4 style="color:var(--accent-blue);margin-bottom:0.75rem;font-size:0.9rem;">Required Skills</h4>
+        <div class="skill-tags" style="margin-bottom:1.5rem;">
+            ${data.skills.map(s => `<span class="skill-tag">${escapeHtml(s)}</span>`).join('')}
+        </div>
+        <h4 style="color:var(--accent-blue);margin-bottom:0.75rem;font-size:0.9rem;">Job Description</h4>
+        <p style="color:var(--text-secondary);font-size:0.85rem;line-height:1.7;max-height:300px;overflow-y:auto;">${escapeHtml(data.job_description)}</p>
+    `;
+    }
+
+    function closeModal() {
+        document.getElementById('jobModal').classList.remove('active');
+    }
+
+    function clearFilters() {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('categoryFilter').value = '';
+        loadJobs(1);
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Load on page ready
+    document.addEventListener('DOMContentLoaded', () => loadJobs(1));
+</script>
+{% endblock %}
